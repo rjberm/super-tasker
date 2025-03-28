@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Siblings Task Tracker V13 (Firebase)!</title> <!-- Version Bump -->
+    <style>
+        /* --- Styles (Unchanged from V11/V12) --- */
+        :root { /* ... Color variables ... */
+            --kid1-color-light: #aeeeee; --kid1-color-dark: #008080;
+            --kid2-color-light: #ffccdd; --kid2-color-dark: #c71585;
+            --bg-color: #f0f8ff; --header-bg: #4682b4; --cell-bg: #ffffff;
+            --today-bg: #fffacd; --accent-color: #ff9800; --text-dark: #333;
+            --text-light: #fff; --border-color: #ddd; --success-color: #4CAF50;
+            --pending-color: #ffc107; --delete-color: #dc3545; --goal-bg: #e3f2fd;
+            --progress-bg: #e9ecef; --top-today-bg: #fafad2;
+        }
+        body { font-family: 'Comic Sans MS','Chalkboard SE','Marker Felt',sans-serif; background-color: var(--bg-color); margin: 0; padding: 15px; color: var(--text-dark); display: flex; flex-direction: column; align-items: center; line-height: 1.5; font-size: 16px; }
+        .container { max-width: 1100px; width: 95%; background-color: var(--cell-bg); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        header { background: linear-gradient(135deg, var(--header-bg), #5a9bd5); color: var(--text-light); padding: 15px 20px; text-align: center; border-radius: 10px 10px 0 0; margin-bottom: 20px; position: relative; }
+        header h1 { margin: 0; font-size: 2em; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .month-navigation { display: flex; justify-content: center; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+        .month-navigation button { background: var(--accent-color); color: var(--text-light); border: none; padding: 8px 15px; font-size: 1.1em; border-radius: 5px; cursor: pointer; margin: 5px 10px; transition: background-color 0.2s ease; }
+        .month-navigation button:hover { background-color: #e68a00; }
+        #currentMonthYear { font-size: 1.4em; font-weight: bold; margin: 5px 0; }
+        #top-today-view { background-color: var(--top-today-bg); border: 2px solid var(--accent-color); border-radius: 8px; padding: 15px; margin-bottom: 20px; width: 100%; box-sizing: border-box; }
+        #top-today-view h2 { text-align: center; margin-top: 0; margin-bottom: 15px; color: var(--header-bg); font-size: 1.4em; }
+        .top-today-container { display: flex; justify-content: space-around; gap: 20px; flex-wrap: wrap; }
+        .top-today-kid { flex: 1; min-width: 250px; padding: 10px; border-radius: 5px; background-color: rgba(255, 255, 255, 0.6); }
+        .top-today-kid h3 { margin-top: 0; margin-bottom: 8px; text-align: center; font-size: 1.2em;}
+        #top-today-kid1 { border: 1px solid var(--kid1-color-dark); } #top-today-kid1 h3 { color: var(--kid1-color-dark); }
+        #top-today-kid2 { border: 1px solid var(--kid2-color-dark); } #top-today-kid2 h3 { color: var(--kid2-color-dark); }
+        #top-today-view .task-item { margin-bottom: 5px; padding: 5px 8px; border-radius: 3px; background-color: #fff; border-left: 3px solid; }
+        #top-today-kid1 .task-item { border-left-color: var(--kid1-color-dark); } #top-today-kid2 .task-item { border-left-color: var(--kid2-color-dark); }
+        #top-today-view .task-item label { font-size: 1em; cursor: pointer; } #top-today-view .task-item span { white-space: normal; } #top-today-view input[type="checkbox"] { width: 16px; height: 16px; margin-right: 6px; cursor: pointer; }
+        #top-today-kid1 input[type="checkbox"]:checked { accent-color: var(--kid1-color-dark); } #top-today-kid2 input[type="checkbox"]:checked { accent-color: var(--kid2-color-dark); }
+        #top-today-view input[type="checkbox"]:disabled { cursor: not-allowed; }
+        .kids-info { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; gap: 20px; }
+        .kid-section { flex: 1 1 300px; min-width: 280px; padding: 15px; border-radius: 8px; box-sizing: border-box; display: flex; flex-direction: column; }
+        .kid-section h2 { margin-top: 0; font-size: 1.5em; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .kid-section h2 input { font-size: 1em; font-family: inherit; border: 1px dashed #ccc; margin-left: 10px; padding: 3px 6px; border-radius: 4px; background: rgba(255,255,255,0.7); width: 120px; max-width: 70%; margin-top: 5px; }
+        #kid1-section { background-color: var(--kid1-color-light); border: 2px solid var(--kid1-color-dark); } #kid1-section h2 { color: var(--kid1-color-dark); } #kid1-section input[type="checkbox"]:checked { accent-color: var(--kid1-color-dark); }
+        #kid2-section { background-color: var(--kid2-color-light); border: 2px solid var(--kid2-color-dark); } #kid2-section h2 { color: var(--kid2-color-dark); } #kid2-section input[type="checkbox"]:checked { accent-color: var(--kid2-color-dark); }
+        .tasks h3 { margin-bottom: 10px; color: inherit; text-align: center; }
+        .task-list-container { margin-bottom: 15px; max-height: 150px; overflow-y: auto; padding-right: 5px; border: 1px solid #eee; padding: 5px; background: rgba(255, 255, 255, 0.5); border-radius: 4px; }
+        .task-list { list-style: none; padding: 0; margin: 0; }
+        .task-list li { margin-bottom: 8px; display: flex; align-items: center; background-color: var(--cell-bg); padding: 5px; border-radius: 3px; }
+        .task-input { flex-grow: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px 0 0 4px; margin-right: 0; font-family: inherit; font-size: 0.9em; border-right: none; }
+        #kid1-section .task-input { border-left: 3px solid var(--kid1-color-dark); } #kid2-section .task-input { border-left: 3px solid var(--kid2-color-dark); }
+        .delete-task-btn { background-color: var(--delete-color); color: white; border: none; padding: 6px 10px; cursor: pointer; font-size: 0.9em; font-weight: bold; border-radius: 0 4px 4px 0; transition: background-color 0.2s ease; }
+        .delete-task-btn:hover { background-color: #c82333; }
+        .add-task-form { display: flex; margin-top: 10px; }
+        .add-task-input { flex-grow: 1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px 0 0 4px; font-family: inherit; font-size: 0.9em; border-right: none; }
+        .add-task-btn { background-color: var(--success-color); color: white; border: none; padding: 6px 12px; cursor: pointer; font-size: 0.9em; border-radius: 0 4px 4px 0; transition: background-color 0.2s ease; }
+        .add-task-btn:hover { background-color: #45a049; }
+        .scores { margin-top: auto; text-align: center; padding-top: 15px; border-top: 1px dashed #ccc; }
+        .scores p { margin: 5px 0; font-weight: bold; font-size: 0.95em; }
+        .progress-bar-container { background-color: var(--progress-bg); border-radius: 5px; height: 22px; margin: 10px auto 5px; width: 80%; overflow: hidden; position: relative; border: 1px solid #ccc; }
+        .progress-bar-inner { height: 100%; width: 0%; border-radius: 5px 0 0 5px; transition: width 0.5s ease-in-out; text-align: right; line-height: 22px; color: var(--text-light); font-size: 0.8em; font-weight: bold; padding-right: 5px; box-sizing: border-box; }
+        #kid1-progress-bar.progress-bar-inner { background-color: var(--kid1-color-dark); }
+        #kid2-progress-bar.progress-bar-inner { background-color: var(--kid2-color-dark); }
+        .progress-percent-text { position: absolute; top: 0; left: 50%; transform: translateX(-50%); line-height: 22px; font-size: 0.8em; font-weight: bold; color: var(--text-dark); }
+        .goal-setter-container { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px; justify-content: space-around; }
+        .goal-setter { background-color: var(--goal-bg); border: 1px dashed var(--header-bg); padding: 15px; border-radius: 8px; text-align: center; flex: 1 1 300px; min-width: 280px; }
+        #goal-setter-kid1 { border-left: 5px solid var(--kid1-color-dark); } #goal-setter-kid2 { border-left: 5px solid var(--kid2-color-dark); }
+        .goal-setter h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.2em; }
+        .goal-setter label, .goal-setter input, .goal-setter button { margin: 5px 5px; vertical-align: middle; }
+        .goal-setter input[type="number"], .goal-setter input[type="date"] { padding: 5px; border-radius: 4px; border: 1px solid var(--border-color); font-family: inherit; font-size: 0.9em; }
+        .goal-setter input[type="number"] { width: 60px; }
+        .goal-setter .set-goal-btn { background: var(--success-color); color: var(--text-light); border: none; padding: 6px 12px; font-size: 0.9em; border-radius: 5px; cursor: pointer; transition: background-color 0.2s ease; }
+        .goal-setter .set-goal-btn:hover { background-color: #45a049; }
+        .goal-status { margin-top: 10px; font-weight: bold; font-size: 0.95em; min-height: 1.2em; }
+        .goal-status.success { color: var(--success-color); } .goal-status.pending { color: var(--pending-color); } .goal-status.expired { color: var(--delete-color); }
+        .calendar-container { margin-top: 20px; overflow-x: auto; }
+        #calendar { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 600px; }
+        #calendar th { background: var(--header-bg); color: var(--text-light); padding: 10px 5px; font-size: 0.9em; text-align: center; font-weight: bold; white-space: nowrap; }
+        #calendar td { border: 1px solid var(--border-color); height: auto; min-height: 120px; vertical-align: top; padding: 5px; background-color: var(--cell-bg); position: relative; transition: background-color 0.3s ease; }
+        #calendar td.other-month { background-color: #f9f9f9; color: #ccc; } #calendar td.other-month .day-number { color: #ccc; } #calendar td.other-month .tasks-for-day { display: none; }
+        #calendar td.today { background-color: var(--today-bg); border: 2px solid var(--accent-color); }
+        #calendar td.is-past {}
+        .day-number { font-weight: bold; font-size: 1.1em; margin-bottom: 5px; display: block; text-align: right; color: #555; }
+        .tasks-for-day { font-size: 0.8em; }
+        .tasks-for-day .kid-tasks { margin-bottom: 8px; max-height: 90px; overflow-y: auto; } .tasks-for-day .kid-tasks:last-child { margin-bottom: 0; }
+        .tasks-for-day strong { display: block; margin-bottom: 3px; font-size: 0.9em; }
+        #kid1-tasks-day strong { color: var(--kid1-color-dark); } #kid2-tasks-day strong { color: var(--kid2-color-dark); }
+        #calendar .task-item label { display: flex; align-items: center; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; margin-bottom: 2px; }
+        #calendar .task-item input[type="checkbox"]:disabled { cursor: not-allowed; accent-color: #ccc; }
+        #calendar .task-item input[type="checkbox"]:disabled + span { color: #aaa; }
+        #calendar .task-item input[type="checkbox"][data-is-past="true"]:checked + span { text-decoration: line-through; }
+        #calendar .task-item input[type="checkbox"] { margin-right: 4px; width: 14px; height: 14px; flex-shrink: 0; cursor: pointer; }
+        #calendar .task-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .view-toggle-container { display: none; text-align: center; margin-bottom: 15px; }
+
+        /* --- Mobile Specific Layout Control (V11 CSS) --- */
+        body.mobile-styles { padding: 5px; font-size: 14px; -webkit-text-size-adjust: 100%; }
+        body.mobile-styles .container { padding: 10px; width: 100%; box-sizing: border-box; }
+        body.mobile-styles:not(.show-details-view) .kids-info, body.mobile-styles:not(.show-details-view) .calendar-container { display: none; }
+        body.mobile-styles .view-toggle-container { display: block; }
+        #top-today-view { display: block; }
+        body.mobile-styles.show-details-view .kids-info { display: flex; }
+        body.mobile-styles.show-details-view .calendar-container { display: block; }
+        /* --- Other Mobile Size Adjustments (Unchanged from V11) --- */
+        body.mobile-styles header h1 { font-size: 1.6em; } body.mobile-styles #currentMonthYear { font-size: 1.2em; } body.mobile-styles .month-navigation button { font-size: 1em; padding: 6px 10px; } body.mobile-styles .kid-section h2 { font-size: 1.3em; } body.mobile-styles .task-input, body.mobile-styles .add-task-input { font-size: 0.95em; } body.mobile-styles .delete-task-btn, body.mobile-styles .add-task-btn { font-size: 0.95em; padding: 6px 8px; } body.mobile-styles .scores p { font-size: 0.9em; } body.mobile-styles .progress-bar-container { width: 90%; height: 20px; } body.mobile-styles .progress-bar-inner { line-height: 20px; font-size: 0.75em; } body.mobile-styles .progress-percent-text { line-height: 20px; font-size: 0.75em; } body.mobile-styles .goal-setter h3 { font-size: 1.1em; } body.mobile-styles .goal-setter label, body.mobile-styles .goal-setter input, body.mobile-styles .goal-setter button { font-size: 0.9em; margin: 3px; } body.mobile-styles .goal-status { font-size: 0.9em; } body.mobile-styles #calendar th { font-size: 0.8em; padding: 8px 2px; } body.mobile-styles #calendar td { min-height: 90px; padding: 3px; } body.mobile-styles .day-number { font-size: 1em; } body.mobile-styles .tasks-for-day { font-size: 0.75em; } body.mobile-styles #calendar .task-item input[type="checkbox"] { width: 13px; height: 13px; }
+
+        /* General Responsive adjustments */
+        @media (max-width: 768px) { #calendar { min-width: 500px; } }
+        @media (max-width: 480px) { #calendar { min-width: 100%; table-layout: auto; } #calendar th { white-space: normal; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+             <h1>🌟 Super Siblings Task Tracker V13 (Firebase)! 🚀</h1>
+             <div class="month-navigation"> <button id="prevMonthBtn">&lt; Prev</button> <span id="currentMonthYear">Month Year</span> <button id="nextMonthBtn">Next &gt;</button> </div>
+        </header>
+
+        <main>
+             <!-- Top Today's Editable Tasks View (Always Visible) -->
+            <section id="top-today-view">
+                 <h2>Today's Tasks (Editable)</h2>
+                 <div class="top-today-container">
+                     <div id="top-today-kid1" class="top-today-kid"> <h3 id="top-today-kid1-name">Kid 1</h3> <div id="top-today-kid1-tasks"></div> </div>
+                     <div id="top-today-kid2" class="top-today-kid"> <h3 id="top-today-kid2-name">Kid 2</h3> <div id="top-today-kid2-tasks"></div> </div>
+                 </div>
+             </section>
+
+            <!-- Kids Info Sections (Hidden on Mobile unless details shown) -->
+            <section class="kids-info">
+                <div id="kid1-section" class="kid-section">
+                    <h2><input type="text" id="kid1Name" placeholder="Enter Name"></h2>
+                    <div class="tasks"> <h3>Daily Missions:</h3> <div class="task-list-container"> <ul class="task-list" id="kid1-task-list"></ul> </div> <div class="add-task-form"> <input type="text" class="add-task-input" id="kid1-add-task-input" placeholder="Add new task..."> <button class="add-task-btn" data-kid="kid1">Add</button> </div> </div>
+                    <div class="scores"> <h3>Points ✨</h3> <p>Week: <span id="kid1-weekly-score">0</span></p> <p>Month: <span id="kid1-monthly-score">0</span></p> <p>Total: <span id="kid1-total-score">0</span></p> <div class="progress-bar-container"> <div id="kid1-progress-bar" class="progress-bar-inner"></div> <span id="kid1-progress-percent" class="progress-percent-text">0%</span> </div> </div>
+                </div>
+                <div id="kid2-section" class="kid-section">
+                     <h2><input type="text" id="kid2Name" placeholder="Enter Name"></h2>
+                    <div class="tasks"> <h3>Daily Missions:</h3> <div class="task-list-container"> <ul class="task-list" id="kid2-task-list"></ul> </div> <div class="add-task-form"> <input type="text" class="add-task-input" id="kid2-add-task-input" placeholder="Add new task..."> <button class="add-task-btn" data-kid="kid2">Add</button> </div> </div>
+                     <div class="scores"> <h3>Points ⭐</h3> <p>Week: <span id="kid2-weekly-score">0</span></p> <p>Month: <span id="kid2-monthly-score">0</span></p> <p>Total: <span id="kid2-total-score">0</span></p> <div class="progress-bar-container"> <div id="kid2-progress-bar" class="progress-bar-inner"></div> <span id="kid2-progress-percent" class="progress-percent-text">0%</span> </div> </div>
+                </div>
+            </section>
+
+            <!-- Goal Setters (Always Visible) -->
+            <section class="goal-setter-container">
+                <div class="goal-setter" id="goal-setter-kid1"> <h3>🏆 Set Goal for <span id="goalSetterNameKid1">Kid 1</span>! 🏆</h3> <label for="goalPointsKid1">Collect</label> <input type="number" id="goalPointsKid1" min="1" value="50"> <label for="goalDateKid1">points by</label> <input type="date" id="goalDateKid1"> <button class="set-goal-btn" data-kid="kid1">Set Goal</button> <div class="goal-status" id="goalStatusKid1"></div> </div>
+                 <div class="goal-setter" id="goal-setter-kid2"> <h3>🏆 Set Goal for <span id="goalSetterNameKid2">Kid 2</span>! 🏆</h3> <label for="goalPointsKid2">Collect</label> <input type="number" id="goalPointsKid2" min="1" value="50"> <label for="goalDateKid2">points by</label> <input type="date" id="goalDateKid2"> <button class="set-goal-btn" data-kid="kid2">Set Goal</button> <div class="goal-status" id="goalStatusKid2"></div> </div>
+            </section>
+
+            <!-- Calendar Container (Hidden on Mobile unless details shown) -->
+            <section class="calendar-container">
+                <div class="view-toggle-container"> <button id="toggleViewBtn">Show Details</button> </div>
+                <table id="calendar"> <thead> <tr> <th>Sun</th> <th>Mon</th> <th>Tue</th> <th>Wed</th> <th>Thu</th> <th>Fri</th> <th>Sat</th> </tr> </thead> <tbody id="calendar-body"></tbody> </table>
+            </section>
+        </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <!-- IMPORTANT: Make sure you use the SDK versions compatible with the code below (v9 Compat shown here) -->
+    <!-- Find the latest versions in your Firebase project settings -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+    <script>
+        // --- Global Variables & DOM Elements ---
+        const calendarBody = document.getElementById('calendar-body'); const currentMonthYearEl = document.getElementById('currentMonthYear'); const prevMonthBtn = document.getElementById('prevMonthBtn'); const nextMonthBtn = document.getElementById('nextMonthBtn'); const calendarTable = document.getElementById('calendar'); const toggleViewBtn = document.getElementById('toggleViewBtn');
+        const kid1NameInput = document.getElementById('kid1Name'); const kid2NameInput = document.getElementById('kid2Name'); const kid1TaskList = document.getElementById('kid1-task-list'); const kid2TaskList = document.getElementById('kid2-task-list'); const kid1AddTaskInput = document.getElementById('kid1-add-task-input'); const kid2AddTaskInput = document.getElementById('kid2-add-task-input'); const kid1AddTaskBtn = document.querySelector('.add-task-btn[data-kid="kid1"]'); const kid2AddTaskBtn = document.querySelector('.add-task-btn[data-kid="kid2"]'); const kid1WeeklyScoreEl = document.getElementById('kid1-weekly-score'); const kid1MonthlyScoreEl = document.getElementById('kid1-monthly-score'); const kid1TotalScoreEl = document.getElementById('kid1-total-score'); const kid2WeeklyScoreEl = document.getElementById('kid2-weekly-score'); const kid2MonthlyScoreEl = document.getElementById('kid2-monthly-score'); const kid2TotalScoreEl = document.getElementById('kid2-total-score');
+        const goalPointsInputKid1 = document.getElementById('goalPointsKid1'); const goalDateInputKid1 = document.getElementById('goalDateKid1'); const goalStatusElKid1 = document.getElementById('goalStatusKid1'); const goalSetterNameKid1 = document.getElementById('goalSetterNameKid1'); const goalPointsInputKid2 = document.getElementById('goalPointsKid2'); const goalDateInputKid2 = document.getElementById('goalDateKid2'); const goalStatusElKid2 = document.getElementById('goalStatusKid2'); const goalSetterNameKid2 = document.getElementById('goalSetterNameKid2'); const setGoalBtnKid1 = document.querySelector('.set-goal-btn[data-kid="kid1"]'); const setGoalBtnKid2 = document.querySelector('.set-goal-btn[data-kid="kid2"]');
+        const kid1ProgressBar = document.getElementById('kid1-progress-bar'); const kid1ProgressPercent = document.getElementById('kid1-progress-percent'); const kid2ProgressBar = document.getElementById('kid2-progress-bar'); const kid2ProgressPercent = document.getElementById('kid2-progress-percent');
+        const topTodayViewKid1NameEl = document.getElementById('top-today-kid1-name'); const topTodayViewKid2NameEl = document.getElementById('top-today-kid2-name'); const topTodayViewKid1TasksEl = document.getElementById('top-today-kid1-tasks'); const topTodayViewKid2TasksEl = document.getElementById('top-today-kid2-tasks');
+
+        // App state
+        let currentViewDate = new Date(); let today = new Date(); today.setHours(0, 0, 0, 0); let todayStr = getYYYYMMDD(today); let isMobile = false;
+        let isShowingDetailsMobile = false; // Default: Mobile hides details
+
+        // Default App Data Structure (used if Firestore is empty or load fails)
+        const defaultAppData = {
+            kidNames: { kid1: "Kid 1", kid2: "Kid 2" },
+            tasks: { kid1: [], kid2: [] },
+            completions: {},
+            goals: { kid1: { points: 50, date: "", set: false }, kid2: { points: 50, date: "", set: false } }
+        };
+
+        // App Data - Start with default, will be overwritten by Firestore load
+        let appData = JSON.parse(JSON.stringify(defaultAppData));
+
+        // --- Firebase Initialization ---
+        const firebaseConfig = {
+  apiKey: "AIzaSyD-e3H5CaoQobBqFwzDnCGZCUbniZQg_J0",
+  authDomain: "i-am-awesome-tasker.firebaseapp.com",
+  projectId: "i-am-awesome-tasker",
+  storageBucket: "i-am-awesome-tasker.firebasestorage.app",
+  messagingSenderId: "853316153385",
+  appId: "1:853316153385:web:58ada1e44fc455a0a82c38",
+  measurementId: "G-598B7S4XKL"
+};
+
+        let db; // Firestore instance
+        let trackerDataRef; // Reference to the shared data document
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            // Use a fixed document ID for the shared data
+            trackerDataRef = db.collection("trackers").doc("sharedTrackerData_V13"); // Added version to doc name
+            console.log("Firebase Initialized Successfully.");
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            alert("Could not connect to the data service. Please check configuration and internet connection.");
+            // Optionally disable parts of the UI if Firebase fails
+        }
+
+
+        // --- Initialization ---
+        function init() {
+            detectMobile();
+            setupEventListeners(); // Setup basic listeners
+            loadDataAndListen(); // Load data and attach real-time listener
+            // UI updates are now called *inside* the Firestore listener (loadDataAndListen)
+        }
+
+        // --- Mobile Detection ---
+        function detectMobile() { /* ... unchanged ... */ isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); if (isMobile) document.body.classList.add('mobile-styles'); }
+
+        // --- Firebase Data Handling ---
+        async function saveDataToFirestore() {
+            if (!trackerDataRef) { console.error("Firestore not initialized, cannot save."); return; }
+            console.log("Attempting to save data to Firestore...");
+            try {
+                // Use set with merge: true to update or create the document
+                await trackerDataRef.set(appData, { merge: true });
+                console.log("Data successfully saved to Firestore.");
+            } catch (error) {
+                console.error("Error writing document to Firestore: ", error);
+                alert("Error saving changes to the cloud!");
+            }
+        }
+
+        function loadDataAndListen() {
+            if (!trackerDataRef) { console.error("Firestore not initialized, cannot load."); return; }
+            console.log("Setting up Firestore listener...");
+
+            trackerDataRef.onSnapshot((doc) => {
+                console.log("Received data snapshot from Firestore...");
+                if (doc.exists) {
+                    console.log("Document data found:", doc.data());
+                    const loadedData = doc.data();
+                    // ** Robust Merging/Defaulting **
+                    appData = {
+                        kidNames: (loadedData && typeof loadedData.kidNames === 'object' && loadedData.kidNames.kid1 && loadedData.kidNames.kid2) ? loadedData.kidNames : defaultAppData.kidNames,
+                        tasks: (loadedData && typeof loadedData.tasks === 'object') ? {
+                            kid1: (loadedData.tasks.kid1 && Array.isArray(loadedData.tasks.kid1)) ? loadedData.tasks.kid1 : defaultAppData.tasks.kid1,
+                            kid2: (loadedData.tasks.kid2 && Array.isArray(loadedData.tasks.kid2)) ? loadedData.tasks.kid2 : defaultAppData.tasks.kid2,
+                        } : defaultAppData.tasks,
+                        completions: (loadedData && typeof loadedData.completions === 'object') ? loadedData.completions : defaultAppData.completions,
+                        goals: (loadedData && typeof loadedData.goals === 'object') ? {
+                            kid1: (loadedData.goals.kid1 && typeof loadedData.goals.kid1 === 'object') ? { ...defaultAppData.goals.kid1, ...loadedData.goals.kid1 } : defaultAppData.goals.kid1,
+                            kid2: (loadedData.goals.kid2 && typeof loadedData.goals.kid2 === 'object') ? { ...defaultAppData.goals.kid2, ...loadedData.goals.kid2 } : defaultAppData.goals.kid2,
+                         } : defaultAppData.goals
+                     };
+                    console.log("Data loaded and merged from Firestore:", appData);
+
+                } else {
+                    console.log("No document in Firestore! Initializing with defaults.");
+                    appData = JSON.parse(JSON.stringify(defaultAppData));
+                    // Save the default data back to Firestore to create the document
+                    saveDataToFirestore();
+                }
+
+                // --- Update UI based on new appData ---
+                updateKidNamesUI();
+                renderTaskDefinitionUI('kid1');
+                renderTaskDefinitionUI('kid2');
+                setCurrentDateGoalInput();
+                updateGoalUI(); // Includes progress bar update
+                renderCalendar(currentViewDate.getFullYear(), currentViewDate.getMonth());
+                renderTopTodayView(); // Render top view with latest data
+                applyMobileViewMode(); // Apply correct view
+                console.log("UI Updated based on Firestore data.");
+
+            }, (error) => {
+                console.error("Error getting document snapshot:", error);
+                alert("Error loading data from the cloud. Please refresh.");
+                // Fallback to default data if listener fails?
+                // appData = JSON.parse(JSON.stringify(defaultAppData));
+                // updateUI(); // Call a generic UI update function here if needed
+            });
+        }
+
+
+        // --- UI Updates ---
+        function renderTaskDefinitionUI(kidId) { /* Renders the editable list in .kids-info */ const el=kidId==='kid1'?kid1TaskList:kid2TaskList; el.innerHTML=''; appData.tasks[kidId].forEach(t=>{const li=document.createElement('li'); const txt=typeof t.text==='string'?t.text:''; li.innerHTML=`<input type="text" class="task-input" value="${escapeHtml(txt)}" data-task-id="${t.id}" data-kid="${kidId}"><button class="delete-task-btn" data-task-id="${t.id}" data-kid="${kidId}">X</button>`; el.appendChild(li); li.querySelector('.task-input').addEventListener('change',handleTaskInputChange); li.querySelector('.delete-task-btn').addEventListener('click',handleDeleteTaskClick);}); }
+        function escapeHtml(unsafe) { if (typeof unsafe !== 'string') return ''; return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+        function updateKidNamesUI() { /* Updates all name instances */ const n1=escapeHtml(appData.kidNames.kid1); const n2=escapeHtml(appData.kidNames.kid2); kid1NameInput.value=n1; kid2NameInput.value=n2; goalSetterNameKid1.textContent=n1; goalSetterNameKid2.textContent=n2; topTodayViewKid1NameEl.textContent=n1; topTodayViewKid2NameEl.textContent=n2; }
+        function updateGoalUI() { /* Updates goal inputs/status and progress */ goalPointsInputKid1.value=appData.goals.kid1.points||50; goalDateInputKid1.value=appData.goals.kid1.date||''; goalPointsInputKid2.value=appData.goals.kid2.points||50; goalDateInputKid2.value=appData.goals.kid2.date||''; displayGoalStatus(); updateProgressBars(); }
+        function setCurrentDateGoalInput() { /* Sets default date */ const eom=new Date(currentViewDate.getFullYear(),currentViewDate.getMonth()+1,0); const dds=getYYYYMMDD(eom); if(!appData.goals.kid1.date) goalDateInputKid1.value=dds; else goalDateInputKid1.value=appData.goals.kid1.date; if(!appData.goals.kid2.date) goalDateInputKid2.value=dds; else goalDateInputKid2.value=appData.goals.kid2.date; }
+
+        // --- Top Today View Rendering ---
+        function renderTopTodayView() { /* Unchanged V11 */
+            today = new Date(); today.setHours(0,0,0,0); todayStr = getYYYYMMDD(today);
+            const k1TasksHTML = generateTaskCheckboxes(todayStr, 'kid1', false, false, false, true); // isEditable = true
+            const k2TasksHTML = generateTaskCheckboxes(todayStr, 'kid2', false, false, false, true); // isEditable = true
+            topTodayViewKid1TasksEl.innerHTML = k1TasksHTML || '<span>No tasks defined for today.</span>';
+            topTodayViewKid2TasksEl.innerHTML = k2TasksHTML || '<span>No tasks defined for today.</span>';
+        }
+
+        // --- Calendar Logic & Task Generation ---
+        function renderCalendar(year, month) { /* Renders only the main calendar table */
+            calendarBody.innerHTML = ''; currentMonthYearEl.textContent=`${new Date(year,month).toLocaleString('default',{month:'long'})} ${year}`;
+            const fD=new Date(year,month,1).getDay(); const dIM=new Date(year,month+1,0).getDate();
+            today=new Date(); today.setHours(0,0,0,0); todayStr=getYYYYMMDD(today);
+            let date=1; let tRE=null;
+            for(let i=0; i<6; i++){const r=document.createElement('tr'); let rHD=!1; for(let j=0; j<7; j++){const c=document.createElement('td'); if((i===0&&j<fD)||date>dIM){c.classList.add('other-month')}else{rHD=!0; const cD=new Date(year,month,date); cD.setHours(0,0,0,0); const cDS=getYYYYMMDD(cD); const iP=cD<today; const iT=cDS===todayStr; const iF=cD>today; c.dataset.date=cDS;
+                const k1H_cal=generateTaskCheckboxes(cDS,'kid1',iP,iF,!1,!1); const k2H_cal=generateTaskCheckboxes(cDS,'kid2',iP,iF,!1,!1); c.innerHTML=`<span class="day-number">${date}</span><div class="tasks-for-day"><div class="kid-tasks"><strong>${escapeHtml(appData.kidNames.kid1)}:</strong>${k1H_cal}</div><div class="kid-tasks"><strong>${escapeHtml(appData.kidNames.kid2)}:</strong>${k2H_cal}</div></div>`; if(iT){c.classList.add('today'); tRE=r} if(iP) c.classList.add('is-past'); date++} r.appendChild(c)} if(tRE===r) r.classList.add('contains-today'); if(!rHD&&i>0) break; calendarBody.appendChild(r)}
+            calculateAndDisplayScores(); displayGoalStatus();
+        }
+        function generateTaskCheckboxes(dateStr, kidId, isPastDate, isFutureDate, isMobileView_UNUSED, isEditable) { /* Unchanged V11 */
+             let h=''; const dc=appData.completions[dateStr]?.[kidId]||{}; const ttr=[];
+             if (isPastDate) { for(const tId in dc){const d=dc[tId]; if(d&&typeof d==='object') ttr.push({id:tId,t:d.taskText||"?",c:d.checked||!1})} }
+             else { appData.tasks[kidId].forEach(t=>{const d=dc[t.id]; ttr.push({id:t.id,t:t.text,c:(d&&typeof d==='object'&&d.checked)||!1})}); }
+             ttr.forEach(ti=>{ const isToday = (dateStr === todayStr); const isDisabled=isPastDate||isFutureDate||(isToday&&!isEditable); const tt=`Task: ${escapeHtml(ti.t)}`; const iC="task-item"; h+=`<div class="${iC}"><label title="${tt}"><input type="checkbox" data-date="${dateStr}" data-kid="${kidId}" data-task-id="${ti.id}" data-is-past="${isPastDate}" data-is-future="${isFutureDate}" ${ti.c?'checked':''} ${isDisabled?'disabled':''}><span>${escapeHtml(ti.t)}</span></label></div>`});
+             if(ttr.length===0){ if(isPastDate) return '<span>(No tasks recorded)</span>'; else return '<span>No tasks defined.</span>'; } return h;
+        }
+        function getYYYYMMDD(date) { /* ... unchanged ... */ const y=date.getFullYear(); const m=String(date.getMonth()+1).padStart(2,'0'); const d=String(date.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; }
+
+
+        // --- Event Handlers ---
+        function setupEventListeners() { /* Unchanged V11 */ prevMonthBtn.addEventListener('click', () => navigateMonth(-1)); nextMonthBtn.addEventListener('click', () => navigateMonth(1)); document.getElementById('top-today-view').addEventListener('change', handleCheckboxEvent); calendarBody.addEventListener('change', handleCheckboxEvent); kid1NameInput.addEventListener('change', handleNameChange); kid2NameInput.addEventListener('change', handleNameChange); document.querySelectorAll('.add-task-btn').forEach(btn => btn.addEventListener('click', handleAddTaskClick)); document.querySelectorAll('.set-goal-btn').forEach(btn => btn.addEventListener('click', handleSetGoal)); toggleViewBtn.addEventListener('click', handleToggleView); }
+        function handleCheckboxEvent(event) { if (event.target.type === 'checkbox') { handleCheckboxChange(event.target); } }
+        function navigateMonth(direction) { /* Unchanged V11 */ currentViewDate.setMonth(currentViewDate.getMonth()+direction); isShowingDetailsMobile=false; renderCalendar(currentViewDate.getFullYear(), currentViewDate.getMonth()); renderTopTodayView(); applyMobileViewMode(); }
+
+        // --- Event handlers for data modification (Call Firestore save) ---
+        function handleCheckboxChange(checkbox) { /* Unchanged V11 */ const ds=checkbox.dataset.date; const ki=checkbox.dataset.kid; const ti=checkbox.dataset.taskId; const iC=checkbox.checked; const cd=new Date(ds+"T00:00:00"); if(cd<today||cd>today){alert("Can only change tasks for today."); checkbox.checked=!iC; return} if(!appData.completions[ds]) appData.completions[ds]={k1:{},k2:{}}; if(!appData.completions[ds][ki]) appData.completions[ds][ki]={}; const tD=appData.tasks[ki].find(t=>t.id===ti); let tT='Task(del)'; if(tD) tT=tD.text; else if(appData.completions[ds]?.[ki]?.[ti]?.taskText) tT=appData.completions[ds][ki][ti].taskText; appData.completions[ds][ki][ti]={checked:iC, taskText:tT}; saveDataToFirestore(); /* NOW saves to Firestore */ /* UI Updates happen via onSnapshot listener */ }
+        function handleNameChange(event) { /* Unchanged V11 - calls saveDataToFirestore */ const kId=event.target.id==='kid1Name'?'kid1':'kid2'; appData.kidNames[kId]=event.target.value.trim()||`Kid ${kId==='kid1'?1:2}`; saveDataToFirestore(); /* UI Updates happen via onSnapshot */ }
+        function handleTaskInputChange(event) { /* Unchanged V11 - calls saveDataToFirestore */ const i=event.target; const kId=i.dataset.kid; const tId=i.dataset.taskId; const nT=i.value.trim(); const tIdx=appData.tasks[kId].findIndex(t=>t.id===tId); if(tIdx>-1){if(nT){appData.tasks[kId][tIdx].text=nT; saveDataToFirestore(); /* UI Updates happen via onSnapshot */}else{alert("Task name cannot be empty."); i.value=appData.tasks[kId][tIdx].text; return}} }
+        function handleAddTaskClick(event) { /* Unchanged V11 - calls handleAddTask */ const b=event.target; const kId=b.dataset.kid; const iE=kId==='kid1'?kid1AddTaskInput:kid2AddTaskInput; const nTT=iE.value.trim(); if(nTT){handleAddTask(kId,nTT,!0); iE.value=''}else{alert("Please enter task text.")}}
+        function handleDeleteTaskClick(event) { /* Unchanged V11 - calls handleDeleteTask */ const b=event.target; const kId=b.dataset.kid; const tId=b.dataset.taskId; if(confirm(`Delete task def? Past points remain.`)){handleDeleteTask(kId,tId,!0)}}
+        function handleSetGoal(event) { /* Unchanged V11 - calls saveDataToFirestore */ const kId=event.target.dataset.kid; if(!kId) return; const pI=kId==='kid1'?goalPointsInputKid1:goalPointsInputKid2; const dI=kId==='kid1'?goalDateInputKid1:goalDateInputKid2; const p=parseInt(pI.value,10); const d=dI.value; if(isNaN(p)||p<=0){alert(`Invalid points for ${appData.kidNames[kId]}.`); return} if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d)){alert(`Invalid date format (YYYY-MM-DD) for ${appData.kidNames[kId]}.`); return} const tD=new Date(d+"T00:00:00"); if(isNaN(tD.getTime())){alert(`Invalid date entered for ${appData.kidNames[kId]}.`); return} appData.goals[kId]={points:p,date:d,set:!0}; saveDataToFirestore(); /* UI Updates happen via onSnapshot */}
+
+
+        // --- Task Management Logic (Call Firestore save) ---
+        function handleAddTask(kidId, taskText, shouldSave = true) { /* Calls saveDataToFirestore */ const nT={id:`t_${kidId}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`, text:taskText}; appData.tasks[kidId].push(nT); /* Optimistic UI update below, then save */ renderTaskDefinitionUI(kidId); renderTopTodayView(); if(shouldSave){saveDataToFirestore();} }
+        function handleDeleteTask(kidId, taskId, shouldSave = true) { /* Calls saveDataToFirestore */ appData.tasks[kidId]=appData.tasks[kidId].filter(t=>t.id!==taskId); /* Optimistic UI update below, then save */ renderTaskDefinitionUI(kidId); renderTopTodayView(); if(shouldSave){saveDataToFirestore();} }
+
+        // --- Scoring & Progress ---
+        function calculateAndDisplayScores() { /* Unchanged V11 */ const v=getVisibleDates(); let k1M=0,k2M=0,k1W=0,k2W=0; const totals=getTotalPointsEarned(); let k1T=totals.kid1; let k2T=totals.kid2; const cWN=getCurrentWeekNumberInView(); const cDM=currentViewDate.getMonth(); v.forEach(dD=>{const dS=dD.dateStr; const wN=dD.week; const dO=new Date(dS+"T00:00:00"); const mN=dO.getMonth(); if(appData.completions[dS]){const dC=appData.completions[dS]; let k1PD=0,k2PD=0; if(dC.kid1)k1PD=Object.values(dC.kid1).filter(c=>c&&c.checked).length; if(dC.kid2)k2PD=Object.values(dC.kid2).filter(c=>c&&c.checked).length; if(mN===cDM){k1M+=k1PD;k2M+=k2PD} if(wN===cWN){k1W+=k1PD;k2W+=k2PD}}}); kid1WeeklyScoreEl.textContent=k1W; kid1MonthlyScoreEl.textContent=k1M; kid1TotalScoreEl.textContent=k1T; kid2WeeklyScoreEl.textContent=k2W; kid2MonthlyScoreEl.textContent=k2M; kid2TotalScoreEl.textContent=k2T; updateProgressBars();}
+        function getVisibleDates() { /* ... unchanged ... */ const d=[]; const r=calendarBody.querySelectorAll('tr'); r.forEach((rw,wi)=>{rw.querySelectorAll('td[data-date]').forEach(c=>d.push({dateStr:c.dataset.date,week:wi}))}); return d }
+        function getCurrentWeekNumberInView() { /* ... unchanged ... */ const r=calendarBody.querySelectorAll('tr'); for(let i=0;i<r.length;i++){if(r[i].querySelector(`td[data-date="${todayStr}"]`))return i} const fvc=calendarBody.querySelector('td[data-date]'); if(fvc){const fvd=new Date(fvc.dataset.date+"T00:00:00"); const fvs=new Date(fvd); fvs.setDate(fvd.getDate()-fvd.getDay()); fvs.setHours(0,0,0,0); const ts=new Date(today); ts.setDate(today.getDate()-today.getDay()); ts.setHours(0,0,0,0); const wd=Math.round((ts-fvs)/(7*24*60*60*1000)); return Math.max(0,wd)} return 0 }
+        function updateProgressBars() { /* Unchanged V11 */ const tpd=getTotalPointsEarned(); updateSingleProgressBar('kid1', tpd.kid1); updateSingleProgressBar('kid2', tpd.kid2); }
+        function updateSingleProgressBar(kidId, currentPoints) { /* Unchanged V11 */ const g=appData.goals[kidId]; const pb=kidId==='kid1'?kid1ProgressBar:kid2ProgressBar; const pp=kidId==='kid1'?kid1ProgressPercent:kid2ProgressPercent; if(!pb||!pp)return; let pc=0; let gt=" / No goal set"; if(g&&g.set&&g.points>0){pc=Math.max(0, Math.min(100,(currentPoints/g.points)*100)); gt=` / ${g.points}`}else if(g&&g.set){pc=currentPoints>0?100:0; gt=` / ${g.points}`} pb.style.width=pc+'%'; pp.textContent=`${currentPoints}${gt} (${pc.toFixed(0)}%)`; }
+
+        // --- Mobile View Toggle Logic ---
+        function applyMobileViewMode() { /* Unchanged V11 */ if(!isMobile){document.body.classList.remove('show-details-view'); return} if(isShowingDetailsMobile){document.body.classList.add('show-details-view'); toggleViewBtn.textContent='Hide Details'}else{document.body.classList.remove('show-details-view'); toggleViewBtn.textContent='Show Details'}}
+        function handleToggleView() { /* Unchanged V11 */ if(!isMobile)return; isShowingDetailsMobile=!isShowingDetailsMobile; applyMobileViewMode()}
+
+        // --- Goal Logic ---
+        function getTotalPointsEarned() { /* ... unchanged ... */ let k1T=0,k2T=0; for(const dS in appData.completions){const dC=appData.completions[dS]; if(dC.kid1)k1T+=Object.values(dC.kid1).filter(c=>c&&c.checked).length; if(dC.kid2)k2T+=Object.values(dC.kid2).filter(c=>c&&c.checked).length} return {kid1:k1T,kid2:k2T}}
+        function displayGoalStatus() { /* Unchanged V11 */ const tpd=getTotalPointsEarned(); ['kid1','kid2'].forEach(kId=>{const kG=appData.goals[kId]; const kP=tpd[kId]; const sE=kId==='kid1'?goalStatusElKid1:goalStatusElKid2; const kN=appData.kidNames[kId]; if(!kG||!kG.set||!kG.date){sE.textContent=`No goal set for ${escapeHtml(kN)}.`; sE.className='goal-status'; return} const tP=kG.points; const tDE=new Date(kG.date+"T23:59:59.999"); let sM=`Goal: ${tP} pts by ${kG.date}. Cur: ${kP}.`; let sC='pending'; if(kP>=tP){sM+=" 🎉 ACHIEVED! 🎉"; sC='success'}else if(today>tDE){sM+=" 😥 Date passed."; sC='expired'}else{sM+=` (${tP-kP} pts left)`; sC='pending'} sE.textContent=sM; sE.className=`goal-status ${sC}`;}); }
+
+        // --- Run Initialization ---
+        // Ensure Firebase is ready before initializing fully, though onSnapshot handles async loading
+        if (typeof firebase !== 'undefined') {
+             init();
+         } else {
+             console.error("Firebase SDK not loaded!");
+             alert("Critical error: Cannot connect to data service. SDK not found.");
+         }
+
+    </script>
+
+</body>
+</html>
