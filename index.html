@@ -14,6 +14,32 @@
             --text-light: #fff; --border-color: #ddd; --success-color: #4CAF50;
             --pending-color: #ffc107; --delete-color: #dc3545; --goal-bg: #e3f2fd;
             --progress-bg: #e9ecef; --top-today-bg: #fafad2;
+
+            /* --- Make Task Text Uppercase --- */
+
+/* Target the display spans in Top Today View and Calendar */
+#top-today-view .task-item span,
+#calendar .task-item span {
+    text-transform: uppercase;
+}
+
+/* Target the editable task input in the Daily Missions list */
+.task-input {
+    /* Apply to the value displayed within the input field */
+    text-transform: uppercase;
+}
+
+/* Optional: Make placeholder text uppercase too */
+.add-task-input::placeholder {
+    text-transform: uppercase;
+}
+/* For older browser compatibility with placeholder styling */
+.add-task-input:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  text-transform: uppercase;
+}
+.add-task-input::-ms-input-placeholder { /* Microsoft Edge */
+  text-transform: uppercase;
+}
         }
         body { font-family: 'Comic Sans MS','Chalkboard SE','Marker Felt',sans-serif; background-color: var(--bg-color); margin: 0; padding: 15px; color: var(--text-dark); display: flex; flex-direction: column; align-items: center; line-height: 1.5; font-size: 16px; }
         .container { max-width: 1100px; width: 95%; background-color: var(--cell-bg); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
