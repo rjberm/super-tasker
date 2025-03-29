@@ -117,6 +117,34 @@
         #calendar .task-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .view-toggle-container { display: none; text-align: center; margin-bottom: 15px; }
 
+        /* --- Mobile Specific Adjustments --- */
+
+/* ... other mobile rules ... */
+
+/* --- Disable Goal Setting Inputs/Button on Mobile --- */
+body.mobile-styles .goal-setter input[type="number"],
+body.mobile-styles .goal-setter input[type="date"],
+body.mobile-styles .goal-setter .set-goal-btn {
+    pointer-events: none; /* Prevents clicks, focus, etc. */
+    opacity: 0.6;         /* Make them look visually disabled */
+    background-color: var(--disabled-bg); /* Use disabled background for inputs/button */
+    cursor: not-allowed;  /* Show not-allowed cursor */
+    border-color: var(--disabled-border); /* Adjust border for inputs */
+}
+
+/* Specifically style the disabled button on mobile */
+body.mobile-styles .goal-setter .set-goal-btn {
+    color: var(--disabled-text); /* Grey out button text */
+    background-color: var(--disabled-border); /* Use a dull background */
+}
+/* Ensure inputs look disabled */
+body.mobile-styles .goal-setter input[type="number"],
+body.mobile-styles .goal-setter input[type="date"] {
+     color: var(--disabled-text);
+}
+
+/* ... rest of mobile rules ... */
+
         /* --- Mobile Specific Layout Control (V11 CSS) --- */
         body.mobile-styles { padding: 5px; font-size: 14px; -webkit-text-size-adjust: 100%; }
         body.mobile-styles .container { padding: 10px; width: 100%; box-sizing: border-box; }
